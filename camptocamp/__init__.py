@@ -29,7 +29,7 @@ from selenium import webdriver
 loglevel = logging.INFO     # Niveau de log
 db_debug_mode = False       # mode debug database
 headless = False            # Chrome headless
-proxy = '127.0.0.1:3128'                # Proxy selenium None ou 'ip:port' exemple '127.0.0.1:3128'
+proxy = None                # Proxy selenium None ou 'ip:port' exemple '127.0.0.1:3128'
 no_image = True             # Pas de Chargement des images
 pickle_filename = ''        # fichier de persistence Pickle
 chromedriver = r"E:\\Logiciels\\Developpement\\chromedriver\\chromedriver_76.exe"
