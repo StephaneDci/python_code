@@ -17,6 +17,8 @@ from urllib.parse import urlparse   # Parsing des urls
 from tqdm import tqdm               # Progress bar
 from camptocamp import logger       # le logger pour l'application
 from camptocamp import init_driver  # Fct d'initialisation du Driver
+from selenium.common.exceptions import TimeoutException
+
 
 # --------------------------------------------------------------------------
 # Classe de parsing du site pour une url de type route
@@ -33,15 +35,12 @@ class C2CParser:
     driver = None
 
     # Construction du Parser
-    def __init__(self, url, proxy=None, headless=True):
+    def __init__(self, url):
         logger.debug("Init de la classe {}".format(self.__class__))
         print("* Traitement de {}".format(url))
         C2CParser.init_cls_driver()         # Initialisation du driver
         self.urlvoie = url
-        self.rawsoup = self.get_soup()
-
-    def __repr__(self):
-        return "C2CParser, urlvoie: '{}', rawsoup: {}".format(self.urlvoie, self.rawsoup)
+        self.rawsoup = self.get_soup_from_url(url)
 
     @classmethod
     def get_driver(cls):
@@ -121,15 +120,21 @@ class C2CParser:
         logger.debug(f"Liste voie APRES filtrage: {filteredlistvoies}")
         return dict.fromkeys(filteredlistvoies)
 
-    # Récupération de l'objet soup afin de permettre l'extraction des informations
-    def get_soup(self):
-        logger.debug("Récuperation du parsing soup de la page {}".format(self.urlvoie))
-        C2CParser.driver.get(self.urlvoie)
-        time.sleep(1)
-        html = C2CParser.driver.page_source
-        soup = BeautifulSoup(html, 'lxml')
-        self.rawsoup = soup
-        return soup
+    # recupération du soup à partir d'une url
+    @staticmethod
+    def get_soup_from_url(url, timeout=10, sleep_sec=1):
+        logger.debug("Récuperation Beautiful soup de la page {}".format(url))
+        # https://stackoverflow.com/questions/26566799/wait-until-page-is-loaded-with-selenium-webdriver-for-python
+        # https://selenium-python.readthedocs.io/waits.html
+        try:
+            C2CParser.driver.set_page_load_timeout(timeout)
+            C2CParser.driver.get(url)
+            time.sleep(sleep_sec)
+            html = C2CParser.driver.page_source
+            soup = BeautifulSoup(html, 'lxml')
+            return soup
+        except TimeoutException as ex:
+            print("Exception Timeout : {} ".format(ex))
 
     def get_titre(self):
         logger.debug("Récupération titre de la voie")
@@ -221,10 +226,7 @@ class C2CParser:
         try:
             pagedessorties = C2CParser.baseurl + self._get_url_outings()
             if pagedessorties is not None:
-                C2CParser.driver.get(pagedessorties)
-                time.sleep(1)
-                html_outings = C2CParser.driver.page_source
-                soup_outings = BeautifulSoup(html_outings, 'lxml')
+                soup_outings = self.get_soup_from_url(pagedessorties)
 
                 # pour ne garder que les sorties /outings/<digits>
                 r = re.compile("/outings/[0-9]+")
@@ -250,12 +252,7 @@ class C2CParser:
             for out in tqdm(urls_outing):
                 # Chargement de la nouvelle page
                 logger.debug("  => {}".format(out))
-                C2CParser.driver.get(self.baseurl + out)
-                # https://stackoverflow.com/questions/26566799/wait-until-page-is-loaded-with-selenium-webdriver-for-python
-                # https://selenium-python.readthedocs.io/waits.html
-                time.sleep(1)   # Permet à la page de se charger (contenu dynamique)
-                html_outing = C2CParser.driver.page_source
-                soup_outing = BeautifulSoup(html_outing, 'lxml')
+                soup_outing = self.get_soup_from_url(self.baseurl + out)
                 try:
                     # Date de la sortie
                     date_sortie = soup_outing.find('span', attrs={'class': 'outing-date is-size-5'}).text.strip()

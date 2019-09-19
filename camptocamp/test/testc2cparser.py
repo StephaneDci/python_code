@@ -1,7 +1,6 @@
+# -*- coding: utf-8 -*-
+
 import unittest
-from unittest.mock import patch
-from unittest.mock import Mock
-import os
 from camptocamp.c2cparser import C2CParser
 from camptocamp import logger
 
@@ -10,7 +9,7 @@ from camptocamp import logger
 # Auteur : SDI
 # Date   : 21/08/2019
 # Objectif : educationnal purpose only. Merci de respecter les copyrights.
-# TODO : mock d'objet C2CParser à faire + test get_list_from_waypoint
+# TODO : mock d'objet C2CParser à faire.
 # ------------------------------------------------------------------------------------------------------
 
 
@@ -24,6 +23,15 @@ class TestParserMethods(unittest.TestCase):
         cls.expected_liste = ['https://www.camptocamp.org/routes/53914']
         cls.expected_baseurl = C2CParser.baseurl
         cls.c2c = C2CParser('https://www.camptocamp.org/routes/171402')
+
+    # A la fin de tous les tests fermeture du driver
+    @classmethod
+    def tearDownClass(cls):
+        cls.c2c.driver.close()
+
+    # -----------------------------------------------------------------------------------------
+    # Tests des méthodes statiques
+    # -----------------------------------------------------------------------------------------
 
     def test_filtre_doublon(self):
         logger.info("\nTest Filtrage des doublons...")
@@ -50,6 +58,10 @@ class TestParserMethods(unittest.TestCase):
         expected = 'https://www.camptocamp.org/routes/171402'
         output = C2CParser.get_urlvoie(inputurl)
         self.assertEqual(output, expected)
+
+    # -----------------------------------------------------------------------------------------
+    # Tests fonctionnels
+    # -----------------------------------------------------------------------------------------
 
     def test_get_titre(self):
         output_titre = self.c2c.get_titre()
@@ -96,7 +108,7 @@ class TestParserMethods(unittest.TestCase):
         self.assertIsInstance(output, list)
         self.assertGreater(len(output), 15)
 
-    @unittest.skip("skipping test (temps d'execution)")
+    @unittest.skip("skipping test récupération des sorties(temps d'execution)")
     def test_get_outings(self):
         output = self.c2c.get_outings()
         self.assertIsInstance(output, str)
