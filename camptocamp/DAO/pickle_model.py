@@ -4,31 +4,60 @@ import pickle
 from camptocamp import pickle_filename, logger
 
 # --------------------------------------------------------------------------
-# Classe Voie pour la persistence dans des fichiers serialisées
+# Classe pour la persistence dans des fichiers serialisées
+# TODO a voir comment optimiser l'algorithme qui est couteux
 # --------------------------------------------------------------------------
 
 
-class Pickle_DAO:
+class PickleDAO:
+    """
+    Classe permettant la persistance via la serialisation des objets
+    """
     def __init__(self):
         pass
 
     @staticmethod
     def insert(voie):
-        logger.info("{} : Serialisation de la voie en cours...".format(voie.titre))
-        pickle.dump(voie, open(pickle_filename, 'wb'))
-        logger.info("Fin de la Serialisation !")
+        """
+        Insertion d'une voie dans une liste et dans un fichier
+        :param voie: l'objet Voie
+        :return:
+        """
+        voies = PickleDAO.restore()
+        if voies is None:
+            voies = list()
 
-    # Retourne id si voie existe, False sinon
+        logger.debug("Il y a {} voies dans {}".format(len(voies), pickle_filename))
+        logger.info("{} : Serialisation.".format(voie.titre))
+        voies.append(voie)
+        pickle.dump(voies, open(pickle_filename, 'wb'))
+
     @staticmethod
     def exists(urldevoie):
-        voies = Pickle_DAO.restore()
-        for v in voies:
-            if v.url == urldevoie:
-                return v.url
+        """
+        Verification de l'existance d'une voie via son url
+        :param urldevoie: url de la voie
+        :return: id si voie existe, False sinon
+        """
+        # Chargement de la liste serialisée
+        voies = PickleDAO.restore()
+
+        # Recherche de la voie via son url
+        if voies is not None:
+            if isinstance(voies, list):
+                for v in voies:
+                    if v.url == urldevoie:
+                        return True
         return False
 
     @staticmethod
     def restore():
-        voies_loaded_p = pickle.load(open(pickle_filename, 'rb'))
-        logger.info("Il y a {} voie(s)".format(len(voies_loaded_p)))
-        return voies_loaded_p
+        """
+        Chargement de l'ensemble des voies serialisées
+        :return: liste d'objet 'Voie'
+        """
+        try:
+            with open(pickle_filename, 'rb') as f:
+                return pickle.load(f)
+        except FileNotFoundError:
+            logger.error("Pickle restore filename {} non existant".format(pickle_filename))
