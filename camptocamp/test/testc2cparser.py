@@ -9,13 +9,10 @@ from camptocamp import logger
 # Auteur : SDI
 # Date   : 21/08/2019
 # Objectif : educationnal purpose only. Merci de respecter les copyrights.
-# TODO : mock d'objet C2CParser à faire.
 # ------------------------------------------------------------------------------------------------------
 
 
 class TestParserMethods(unittest.TestCase):
-    # Liste equality test
-    # https://stackoverflow.com/questions/12813633/how-to-assert-two-list-contain-the-same-elements-in-python
 
     # Chargement une seule fois pour la classe
     @classmethod
@@ -58,6 +55,12 @@ class TestParserMethods(unittest.TestCase):
         expected = 'https://www.camptocamp.org/routes/171402'
         output = C2CParser.get_urlvoie(inputurl)
         self.assertEqual(output, expected)
+
+    def test_get_list_from_waypoint(self):
+        output = self.c2c.get_list_from_waypoint('https://www.camptocamp.org/waypoints/40766/fr/presles-eliane',
+                                                 typecourse='Escalade')
+        self.assertIsInstance(output, list)
+        self.assertGreater(len(output), 10)
 
     # -----------------------------------------------------------------------------------------
     # Tests fonctionnels
@@ -108,13 +111,18 @@ class TestParserMethods(unittest.TestCase):
         self.assertIsInstance(output, list)
         self.assertGreater(len(output), 15)
 
+    """
     @unittest.skip("skipping test récupération des sorties(temps d'execution)")
     def test_get_outings(self):
         output = self.c2c.get_outings()
         self.assertIsInstance(output, str)
         self.assertIn(output, '\n')
         self.assertGreater(len(output), 500)
+    """
 
 
+# --------------------------------------------------------------------------
+# Execution principale des tests
+# --------------------------------------------------------------------------
 if __name__ == '__main__':
     unittest.main()
